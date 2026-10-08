@@ -1,0 +1,76 @@
+name: Deploy KNUST Hive web preview
+
+on:
+  push:
+    branches:
+      - main
+      - knust-hive-ubiquitous-couscous
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+          cache-dependency-path: knust_hive/pubspec.lock
+
+      - name: Install dependencies
+        working-directory: knust_hive
+        run: flutter pub get
+
+      - name: Check formatting
+        working-directory: knust_hive
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        working-directory: knust_hive
+        run: flutter analyze
+
+      - name: Run tests
+        working-directory: knust_hive
+        run: flutter test
+
+      - name: Build web app
+        working-directory: knust_hive
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          test -n "$SUPABASE_URL" || { echo "Set the SUPABASE_URL repository variable."; exit 1; }
+          test -n "$SUPABASE_PUBLISHABLE_KEY" || { echo "Set the SUPABASE_PUBLISHABLE_KEY repository variable."; exit 1; }
+          flutter build web --release \
+            --base-href /knust-hive/ \
+            --dart-define="SUPABASE_URL=$SUPABASE_URL" \
+            --dart-define="SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY"
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload web artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: knust_hive/build/web
+
+      - name: Deploy web preview
+        id: deployment
+        uses: actions/deploy-pages@v4
