@@ -129,30 +129,87 @@ class _SkillsScreenState extends ConsumerState<SkillsScreen> {
           }
           final completedCount =
               progress.values.where((status) => status == 'completed').length;
+          final completion =
+              skills.isEmpty ? 0.0 : completedCount / skills.length;
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
             children: [
-              Card(
-                color: AppColors.forest,
-                child: ListTile(
-                  leading:
-                      const Icon(Icons.school_outlined, color: AppColors.gold),
-                  title: const Text('Your progress',
-                      style: TextStyle(color: Colors.white)),
-                  subtitle: Text(
-                    '$completedCount of ${skills.length} resources completed',
-                    style: const TextStyle(color: Colors.white70),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.forest, AppColors.forestLight],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  trailing: Text(
-                    '${skills.isEmpty ? 0 : (completedCount * 100 ~/ skills.length)}%',
-                    style: const TextStyle(
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const CircleAvatar(
+                          backgroundColor: Color(0x33FFFFFF),
+                          child:
+                              Icon(Icons.auto_awesome, color: AppColors.gold),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Build your next skill',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                '$completedCount of ${skills.length} learning paths completed',
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          '${(completion * 100).round()}%',
+                          style: const TextStyle(
+                            color: AppColors.gold,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: completion,
+                        minHeight: 7,
+                        backgroundColor: Colors.white24,
+                        valueColor:
+                            const AlwaysStoppedAnimation<Color>(AppColors.gold),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 20),
+              Text(
+                'Learning paths',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 10),
               for (final skill in skills)
                 _SkillTile(
                   skill: skill,
@@ -186,15 +243,16 @@ class _SkillTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final completed = status == 'completed';
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         leading: IconButton(
           tooltip: completed ? 'Mark in progress' : 'Mark complete',
           icon: Icon(
-            completed ? Icons.check_circle : Icons.circle_outlined,
-            color: completed ? AppColors.forest : const Color(0xFFCBD1BE),
+            completed ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: completed ? colors.primary : colors.outline,
           ),
           onPressed: onToggle,
         ),
@@ -202,13 +260,49 @@ class _SkillTile extends StatelessWidget {
           skill['title'] as String? ?? 'Learning resource',
           style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
         ),
-        subtitle: Text(
-          [
-            if (skill['tag'] != null) '${skill['tag']} · ',
-            skill['description'] as String? ?? '',
-            if (completed) ' · Completed',
-          ].join(),
-          style: const TextStyle(fontSize: 12),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if ((skill['description'] as String? ?? '').isNotEmpty)
+                Text(
+                  skill['description'] as String,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              if (skill['tag'] != null || completed) ...[
+                const SizedBox(height: 7),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    if (skill['tag'] != null)
+                      Chip(
+                        label: Text(skill['tag'] as String),
+                        visualDensity: VisualDensity.compact,
+                        labelStyle: TextStyle(
+                          fontSize: 10,
+                          color: colors.primary,
+                        ),
+                        backgroundColor: colors.primaryContainer,
+                        side: BorderSide.none,
+                      ),
+                    if (completed)
+                      const Chip(
+                        label: Text('Completed'),
+                        visualDensity: VisualDensity.compact,
+                        labelStyle: TextStyle(fontSize: 10),
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
         ),
         trailing: IconButton(
           tooltip: 'Open learning resource',

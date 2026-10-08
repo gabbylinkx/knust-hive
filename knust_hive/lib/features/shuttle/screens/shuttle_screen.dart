@@ -49,12 +49,12 @@ class _ShuttleScreenState extends ConsumerState<ShuttleScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Shuttle tracker')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
           _RouteMapCard(locationsAsync: liveLocationsAsync),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           const _DriverLocationPanel(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _ReportBar(
             selectedStopId: selectedStopId,
             onStopChanged: (id) => setState(() => selectedStopId = id),
@@ -82,7 +82,7 @@ class _ShuttleScreenState extends ConsumerState<ShuttleScreen> {
               }
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           Text('Recent sightings',
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
@@ -123,18 +123,20 @@ class _RouteMapCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 6,
               children: [
                 Text('Live shuttle locations',
                     style: Theme.of(context).textTheme.titleMedium),
-                const Row(children: [
+                const Wrap(spacing: 10, children: [
                   _LegendDot(color: AppColors.forestLight, label: 'Green'),
-                  SizedBox(width: 10),
                   _LegendDot(color: AppColors.gold, label: 'Gold'),
                 ]),
               ],
@@ -245,7 +247,10 @@ class _RouteMapCard extends StatelessWidget {
                 orElse: () =>
                     'Vehicle positions are streamed from approved shuttle operators.',
               ),
-              style: const TextStyle(fontSize: 11.5, color: Color(0xFF5B6355)),
+              style: TextStyle(
+                fontSize: 11.5,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

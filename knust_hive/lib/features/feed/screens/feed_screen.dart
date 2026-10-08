@@ -22,16 +22,64 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Campus feed')),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.gold,
-        foregroundColor: AppColors.forest,
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         onPressed: () => _openComposer(context),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.edit_rounded),
+        label: const Text('Create post'),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.forest, AppColors.forestLight],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Color(0x33FFFFFF),
+                    child: Icon(Icons.campaign_rounded, color: AppColors.gold),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'What’s happening on campus?',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          'Discover events, study groups and updates from students.',
+                          style: TextStyle(
+                            color: AppColors.goldSoft,
+                            fontSize: 12,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(children: [
@@ -57,18 +105,72 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     ? posts
                     : posts.where((p) => p.category == filter).toList();
                 if (visible.isEmpty) {
-                  return const Center(
-                      child: Text('Nothing here yet. Be the first to post.',
-                          style: TextStyle(color: Color(0xFF5B6355))));
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.forum_outlined,
+                                size: 36,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Your campus feed starts here',
+                                style: Theme.of(context).textTheme.titleMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                filter == null
+                                    ? 'Be the first to share an update with the community.'
+                                    : 'No posts in this category yet. Try another topic or start the conversation.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
                 }
                 return ListView.builder(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 88),
                   itemCount: visible.length,
                   itemBuilder: (ctx, i) => _PostCard(post: visible[i]),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Couldn\'t load feed: $e')),
+              error: (e, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.cloud_off_outlined, size: 36),
+                      const SizedBox(height: 10),
+                      Text('Couldn’t load the campus feed: $e',
+                          textAlign: TextAlign.center),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: () => ref.invalidate(feedProvider),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try again'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ],
