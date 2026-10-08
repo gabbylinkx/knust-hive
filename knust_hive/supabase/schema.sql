@@ -153,10 +153,33 @@ create table messages (
   chat_id uuid references chats(id) on delete cascade,
   sender_id uuid references profiles(id),
   text text not null,
+  message_type text not null default 'text'
+    check (message_type in ('text', 'image', 'video', 'audio', 'file')),
+  attachment_path text,
+  file_name text,
+  mime_type text,
   flagged boolean default false, -- set by moderation function before showing on wall
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  unique (id, chat_id),
+  check (
+    (message_type = 'text' and attachment_path is null)
+    or (message_type <> 'text' and attachment_path is not null)
+  )
 );
 create index on messages (chat_id, created_at);
+
+create table message_reactions (
+  id uuid primary key default uuid_generate_v4(),
+  message_id uuid not null,
+  chat_id uuid not null,
+  user_id uuid not null references profiles(id) on delete cascade,
+  emoji text not null check (emoji in ('❤️', '😂', '😮', '😢', '🔥', '👍')),
+  created_at timestamptz not null default now(),
+  unique (message_id, user_id, emoji),
+  foreign key (message_id, chat_id)
+    references messages(id, chat_id) on delete cascade
+);
+create index on message_reactions (chat_id, message_id);
 
 -- ---------- Skills ----------
 create table skill_paths (
@@ -278,6 +301,7 @@ alter table live_shuttle_locations enable row level security;
 alter table ride_posts enable row level security;
 alter table feed_posts enable row level security;
 alter table messages enable row level security;
+alter table message_reactions enable row level security;
 alter table chat_members enable row level security;
 alter table communities enable row level security;
 alter table community_members enable row level security;
@@ -518,7 +542,78 @@ drop policy if exists "messages insertable only by chat members" on messages;
 create policy "messages insertable only by chat members"
   on messages for insert to authenticated
   with check (
-    sender_id = auth.uid() and public.is_chat_member(chat_id)
+    sender_id = auth.uid()
+    and public.is_chat_member(chat_id)
+    and (
+      attachment_path is null
+      or (
+        (storage.foldername(attachment_path))[1] = chat_id::text
+        and (storage.foldername(attachment_path))[2] = auth.uid()::text
+      )
+    )
+  );
+create policy "senders delete their own chat messages"
+  on messages for delete to authenticated
+  using (sender_id = auth.uid() and public.is_chat_member(chat_id));
+
+create policy "chat members read message reactions"
+  on message_reactions for select to authenticated
+  using (public.is_chat_member(chat_id));
+create policy "chat members add their own message reactions"
+  on message_reactions for insert to authenticated
+  with check (user_id = auth.uid() and public.is_chat_member(chat_id));
+create policy "students remove their own message reactions"
+  on message_reactions for delete to authenticated
+  using (user_id = auth.uid() and public.is_chat_member(chat_id));
+grant delete on messages to authenticated;
+grant select, insert, delete on message_reactions to authenticated;
+
+insert into storage.buckets (
+  id, name, public, file_size_limit, allowed_mime_types
+)
+values (
+  'chat-media',
+  'chat-media',
+  false,
+  26214400,
+  array[
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    'video/mp4', 'video/webm', 'video/quicktime',
+    'audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/webm', 'audio/wav',
+    'application/pdf', 'text/plain', 'text/csv',
+    'application/rtf', 'application/zip',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  ]
+)
+on conflict (id) do update
+set public = false,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+create policy "chat members upload their own media"
+  on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'chat-media'
+    and (storage.foldername(name))[2] = auth.uid()::text
+    and public.is_chat_member((storage.foldername(name))[1]::uuid)
+  );
+create policy "chat members read chat media"
+  on storage.objects for select to authenticated
+  using (
+    bucket_id = 'chat-media'
+    and public.is_chat_member((storage.foldername(name))[1]::uuid)
+  );
+create policy "senders delete their own chat media"
+  on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'chat-media'
+    and (storage.foldername(name))[2] = auth.uid()::text
+    and public.is_chat_member((storage.foldername(name))[1]::uuid)
   );
 
 create policy "students manage their timetable"
@@ -586,6 +681,7 @@ alter publication supabase_realtime add table live_shuttle_locations;
 alter publication supabase_realtime add table ride_posts;
 alter publication supabase_realtime add table feed_posts;
 alter publication supabase_realtime add table messages;
+alter publication supabase_realtime add table message_reactions;
 alter publication supabase_realtime add table chat_members;
 alter publication supabase_realtime add table timetable_entries;
 alter publication supabase_realtime add table cwa_records;

@@ -160,6 +160,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chat'),
@@ -190,70 +191,152 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: conversations,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return ListView(
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    colors.primary,
+                    colors.primary.withValues(alpha: 0.82)
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 120),
-                  Center(
-                      child: Text('Could not load chats: ${snapshot.error}')),
-                  Center(
-                    child: TextButton(
-                      onPressed: _refresh,
-                      child: const Text('Try again'),
-                    ),
+                  const Icon(Icons.forum_rounded,
+                      color: Colors.white, size: 28),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Your campus circle',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Keep up with your people. Share photos, clips, voice notes and files.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: _startDirectChat,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: colors.primary,
+                          ),
+                          icon: const Icon(Icons.chat_bubble_outline),
+                          label: const Text('Message'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _createGroup,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white70),
+                          ),
+                          icon: const Icon(Icons.group_add_outlined),
+                          label: const Text('New group'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              );
-            }
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final chats = snapshot.data!;
-            if (chats.isEmpty) {
-              return ListView(
-                children: const [
-                  SizedBox(height: 120),
-                  Icon(Icons.forum_outlined, size: 44),
-                  SizedBox(height: 12),
-                  Center(child: Text('No chats yet')),
-                  Center(
-                    child: Text('Create a group to start a conversation.'),
-                  ),
-                ],
-              );
-            }
-            return ListView.builder(
-              itemCount: chats.length,
-              itemBuilder: (context, index) {
-                final chat = chats[index];
-                final id = chat['id'] as String;
-                final title = chat['name'] as String? ?? 'Conversation';
-                return ListTile(
-                  leading: CircleAvatar(
-                    child: Icon(chat['is_group'] == true
-                        ? Icons.groups_outlined
-                        : Icons.person_outline),
-                  ),
-                  title: Text(title),
-                  subtitle: const Text('Open conversation'),
-                  trailing: Icon(
-                    chat['is_group'] == true
-                        ? Icons.chevron_right
-                        : Icons.mark_chat_unread_outlined,
-                  ),
-                  onTap: () => context.push(
-                    '/chat/$id?title=${Uri.encodeQueryComponent(title)}',
-                  ),
-                );
-              },
-            );
-          },
-        ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refresh,
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: conversations,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return ListView(
+                      children: [
+                        const SizedBox(height: 120),
+                        Center(
+                            child: Text(
+                                'Could not load chats: ${snapshot.error}')),
+                        Center(
+                          child: TextButton(
+                            onPressed: _refresh,
+                            child: const Text('Try again'),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final chats = snapshot.data!;
+                  if (chats.isEmpty) {
+                    return ListView(
+                      children: const [
+                        SizedBox(height: 120),
+                        Icon(Icons.forum_outlined, size: 44),
+                        SizedBox(height: 12),
+                        Center(child: Text('No chats yet')),
+                        Center(
+                          child:
+                              Text('Create a group to start a conversation.'),
+                        ),
+                      ],
+                    );
+                  }
+                  return ListView.builder(
+                    itemCount: chats.length,
+                    itemBuilder: (context, index) {
+                      final chat = chats[index];
+                      final id = chat['id'] as String;
+                      final title = chat['name'] as String? ?? 'Conversation';
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 5,
+                        ),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: colors.secondaryContainer,
+                            child: Icon(
+                              chat['is_group'] == true
+                                  ? Icons.groups_rounded
+                                  : Icons.person_rounded,
+                              color: colors.primary,
+                            ),
+                          ),
+                          title: Text(title,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: const Text('Open conversation'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.push(
+                            '/chat/$id?title=${Uri.encodeQueryComponent(title)}',
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

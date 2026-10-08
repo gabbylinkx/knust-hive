@@ -15,7 +15,11 @@ for KNUST students. Flutter + Riverpod + Supabase.
   event RSVP and member reporting for moderator review.
 - Curated external learning resources with per-student cloud progress.
 - Group and one-to-one chat with realtime messages and creator-managed group
-  membership. Student communities, mentorship requests, timetable, CWA
+  membership, private photo/video/audio/document sharing, recorded voice notes,
+  opt-in location sharing, and realtime emoji reactions. Chat media persists
+  until the sender deletes the message; it is not end-to-end encrypted, and
+  recipients can save or screenshot shared content. Student communities,
+  mentorship requests, timetable, CWA
   calculator, marketplace, HTTPS past-question links, an emergency dialer
   shortcut, and a moderator report queue are available under **More**.
 - The application still requires a configured Supabase project. Push
@@ -35,8 +39,8 @@ for KNUST students. Flutter + Riverpod + Supabase.
    reviewed migration before upgrading a live project.
    For an existing project that already ran this schema, apply the additive
    migrations in order: `0002_student_features.sql`,
-   `0003_remove_student_id.sql`, then `0004_live_shuttle_and_cwa.sql`. Do not
-   rerun the fresh schema.
+   `0003_remove_student_id.sql`, `0004_live_shuttle_and_cwa.sql`, then
+   `0005_chat_media_and_reactions.sql`. Do not rerun the fresh schema.
 3. Before login or registration, the database schema must be deployed. The
    app checks for the `profiles` table and explains this setup step if it is
    missing.
