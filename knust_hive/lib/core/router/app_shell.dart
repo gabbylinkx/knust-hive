@@ -30,27 +30,40 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: index, children: screens),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: index,
-        onTap: (i) => setState(() => index = i),
-        items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.rss_feed), label: 'Feed'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.directions_bus_outlined),
-              activeIcon: Icon(Icons.directions_bus),
-              label: 'Shuttle'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.school_outlined),
-              activeIcon: Icon(Icons.school),
-              label: 'Skills'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.grid_view_outlined), label: 'More'),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: index,
+        onDestinationSelected: (value) => setState(() => index = value),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.dynamic_feed_outlined),
+            selectedIcon: Icon(Icons.dynamic_feed),
+            label: 'Feed',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.directions_bus_outlined),
+            selectedIcon: Icon(Icons.directions_bus),
+            label: 'Shuttle',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.auto_awesome_outlined),
+            selectedIcon: Icon(Icons.auto_awesome),
+            label: 'Skills',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.chat_bubble_outline),
+            selectedIcon: Icon(Icons.chat_bubble),
+            label: 'Chat',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.grid_view_outlined),
+            selectedIcon: Icon(Icons.grid_view_rounded),
+            label: 'More',
+          ),
         ],
       ),
     );

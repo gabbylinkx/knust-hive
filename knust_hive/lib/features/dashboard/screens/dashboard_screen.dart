@@ -95,6 +95,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
+    final colors = Theme.of(context).colorScheme;
     final greeting = now.hour < 12
         ? 'Good morning'
         : now.hour < 17
@@ -106,22 +107,50 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('KNUST Hive'),
+        titleSpacing: 20,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'KNUST Hive',
+              style: TextStyle(fontWeight: FontWeight.w800),
+            ),
+            Text(
+              'Your campus, connected.',
+              style: TextStyle(
+                color: colors.onSurfaceVariant,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Profile',
             onPressed: () => context.push('/profile'),
-            icon: const Icon(Icons.account_circle_outlined),
+            icon: CircleAvatar(
+              radius: 17,
+              backgroundColor: colors.primary,
+              child: Icon(Icons.person, size: 18, color: colors.onPrimary),
+            ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
-          Text(greeting, style: Theme.of(context).textTheme.titleLarge),
-          Text(DateFormat('EEEE, MMMM d').format(now),
-              style: const TextStyle(color: Color(0xFF5B6355), fontSize: 12.5)),
-          const SizedBox(height: 16),
+          Text(greeting, style: Theme.of(context).textTheme.headlineSmall),
+          Text(
+            DateFormat('EEEE, MMMM d').format(now),
+            style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13),
+          ),
+          const SizedBox(height: 18),
+          const _CampusWelcomeCard(),
+          const SizedBox(height: 20),
+          Text('Campus at a glance',
+              style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 10),
           Row(children: [
             Expanded(
               child: reportsAsync.when(
@@ -148,12 +177,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
           ]),
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
           Text("Today's schedule",
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           _TodaySchedule(userId: userId, day: now.weekday % 7),
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
           Row(
             children: [
               Expanded(
@@ -224,11 +253,68 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               );
             },
           ),
-          const Padding(
-            padding: EdgeInsets.only(top: 4),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
             child: Text(
               'Tasks are saved on this device and are not synced between devices.',
-              style: TextStyle(fontSize: 11, color: Color(0xFF5B6355)),
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CampusWelcomeCard extends StatelessWidget {
+  const _CampusWelcomeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.forest, AppColors.forestLight],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: Color(0x33FFFFFF),
+            child: Icon(Icons.hive_rounded, color: AppColors.gold),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Campus life, in sync.',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Keep classes, shuttle activity and student life close at hand.',
+                  style: TextStyle(
+                    color: AppColors.goldSoft,
+                    height: 1.4,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -346,21 +432,29 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 18, color: AppColors.forest),
-            const SizedBox(height: 6),
-            Text('$value',
-                style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'monospace')),
-            Text(label,
-                style: const TextStyle(fontSize: 11, color: Color(0xFF5B6355))),
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: AppColors.gold.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: colors.primary, size: 20),
+            ),
+            const SizedBox(height: 12),
+            Text('$value', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11.5),
+            ),
           ],
         ),
       ),
